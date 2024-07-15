@@ -13,7 +13,7 @@ SC_MODULE(DataCache) {
     // Cache行的结构
     struct DCACHE_LineStruct {
         bool Valid;
-        uint64_t Tag;
+        uint32_t Tag;
         std::vector<uint8_t> Data;
     };
 
@@ -157,7 +157,7 @@ SC_MODULE(DataCache) {
     }
 };
 
-// 主测试函数
+/* // 主测试函数
 int sc_main(int argc, char* argv[]) {
     int cache_size = 16384; // 外部输入设置
     int line_size = 64; // 外部输入设置
@@ -165,4 +165,4 @@ int sc_main(int argc, char* argv[]) {
     DataCache cache("DataCache", cache_size, line_size);
     sc_start();
     return 0;
-}
+} */
