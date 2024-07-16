@@ -6,7 +6,7 @@
 MAIN := main.cpp
 
 # assignment task file
-ASSIGNMENT := cache.hpp rahmensprogramm.h l2Cache.cpp
+ASSIGNMENT := cache.hpp rahmensprogramm.h main.hpp
 
 # target name
 TARGET := DataCache
@@ -49,7 +49,7 @@ release: $(TARGET)
 
 # recipe for building the program
 $(TARGET): $(MAIN) $(ASSIGNMENT) rahmensprogramm.c
-	$(CXX) $(CXXFLAGS) -o $@ $(MAIN) l2Cache.cpp rahmensprogramm.c $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $(MAIN) main.hpp rahmensprogramm.c $(LDFLAGS)
 
 # clean up
 clean:
