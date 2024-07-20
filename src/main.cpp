@@ -142,7 +142,8 @@ int sc_main(int argc, char* argv[]) {
     // 其他代码，例如加载输入文件，运行模拟等
     struct Result result;
     //cycle 不满足时的处理，直接重新执行simulation
-    if (100 * num_requests > config.cycles ) {
+    int time_to_done = config.cacheline_size / 4 * (config.l1_latency + config.l2_latency + config.memory_latency);
+    if (time_to_done * num_requests > config.cycles ) {
         result = run_simulation(0x7FFFFFFF, config.l1_lines, config.l2_lines, config.cacheline_size, 
                     config.l1_latency, config.l2_latency, config.memory_latency,
                     num_requests, requests, config.tracefile ? config.tracefile : nullptr);

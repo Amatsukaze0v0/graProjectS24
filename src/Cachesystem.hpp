@@ -95,8 +95,8 @@ SC_MODULE(CacheSystem) {
     }
 
     void process_request(Request& req) {
-        if (req.addr & 3 != 0) {
-            throw std::runtime_error("tutor nmsl");
+        if (req.addr & 3 != 0 || req.addr > 0xFFFFF) {
+            throw std::runtime_error("Address illegal!");
         }
         addr.write(req.addr);
         we.write(req.we);
