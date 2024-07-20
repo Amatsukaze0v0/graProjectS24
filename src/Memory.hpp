@@ -57,7 +57,6 @@ public:
                     wb.write(1);
                 }
             }
-            
             wait(latency_to_time(latency));  // 模拟延迟
             done_event.notify();  // 通知完成事件
         }

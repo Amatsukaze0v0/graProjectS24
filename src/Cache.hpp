@@ -104,7 +104,6 @@ public:
                 std::cout << "Offset for this round: " << offset << std::endl;
                 std::cout << "Tag for this round: " << tag << std::endl;
 
-                std::cout << "*********   Valid of line 16: " << lines[16]->valid.read() << std::endl;
                 std::cout << std::endl << "line valid is : " << line->valid.read() << std::endl;
                 std::cout << "Tag inside cache is : " << line->tag.read() << std::endl;
             
@@ -128,7 +127,6 @@ public:
                     if (!we.read()) {
                         next_addr.write(addr.read());
                         next_we.write(false);  // Read operation from L2
-                        wait(latency_to_time(latency));  // Simulate L2 latency
                         std::cout << "Read miss. Proceed to next Structur." << std::endl;
                     } else {
                         next_addr.write(addr.read());
@@ -138,6 +136,7 @@ public:
                     }
                 }
             }
+            wait(latency_to_time(latency));  // Simulate latency
             done_event.notify();  // 通知完成事件
         }
     }
