@@ -3,10 +3,10 @@
 # ---------------------------------------
 
 # entry point for the program and target name
-MAIN := main.cpp
+MAIN := src/main.cpp
 
 # assignment task file
-ASSIGNMENT := cache.hpp rahmensprogramm.h main.hpp
+ASSIGNMENT := src/Cache.hpp src/rahmensprogramm.h src/main.hpp
 
 # target name
 TARGET := DataCache
@@ -48,8 +48,8 @@ release: CXXFLAGS += -O2
 release: $(TARGET)
 
 # recipe for building the program
-$(TARGET): $(MAIN) $(ASSIGNMENT) rahmensprogramm.c
-	$(CXX) $(CXXFLAGS) -o $@ $(MAIN) main.hpp rahmensprogramm.c $(LDFLAGS)
+$(TARGET): $(MAIN) $(ASSIGNMENT) src/rahmensprogramm.c
+	$(CXX) $(CXXFLAGS) -o $@ $(MAIN) src/main.hpp src/rahmensprogramm.c $(LDFLAGS)
 
 # clean up
 clean:

@@ -9,7 +9,7 @@ typedef struct {
     int l1_latency;
     int l2_latency;
     int memory_latency;
-    char *tracefile;
+    const char* tracefile;
     char *input_file;
 } CacheConfig;
 

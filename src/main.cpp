@@ -5,11 +5,9 @@
 #include <systemc.h>
 #include <sstream>
 #include <vector>
-#include "cache.hpp"  // 假设您的缓存实现放在这个头文件中
+#include "Cache.hpp"  // 假设您的缓存实现放在这个头文件中
 #include "rahmensprogramm.h"  // 包含命令行解析的头文件
 #include "main.hpp"
-
-
 
 void read_config(CacheConfig &config) {
     std::ifstream file("config.txt");
@@ -34,8 +32,8 @@ void read_config(CacheConfig &config) {
 
 
 // 函数用于读取并解析输入文件
-std::vector<Request> read_input_file(const std::string& filename) {
-    std::cout << "successfully in the csv function." << std::endl;
+Request* read_input_file(const std::string& filename, size_t* num_requests) {
+    std::cout << "Successfully in the CSV function." << std::endl;
     std::ifstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Failed to open input file: " << filename << std::endl;
@@ -75,8 +73,31 @@ std::vector<Request> read_input_file(const std::string& filename) {
     }
 
     file.close();
-    return requests;
+
+    // 分配动态内存并复制请求
+    *num_requests = requests.size();
+    Request* requests_array = (Request*)malloc(*num_requests * sizeof(Request));
+    if (requests_array == nullptr) {
+        std::cerr << "Failed to allocate memory for requests" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    std::copy(requests.begin(), requests.end(), requests_array);
+
+    std::cout << "Request Array complete." << std::endl;
+
+    return requests_array;
 }
+
+void write_requests_to_csv(const std::string& filename, Request* requests, size_t num_requests) {
+    std::ofstream outfile(filename);
+    for (size_t i = 0; i < num_requests; ++i) {
+        outfile << (requests[i].we ? "W," : "R,")
+                << requests[i].addr << ","
+                << requests[i].data << std::endl;
+    }
+    outfile.close();
+}
+
 
 //test
 SC_MODULE(MODULE) {
@@ -99,7 +120,6 @@ SC_MODULE(MODULE) {
 
 int sc_main(int argc, char* argv[]) {
     CacheConfig config;
-
     if (parse_args(argc, argv, &config) != 0) {
         return 1;
     }
@@ -117,31 +137,19 @@ int sc_main(int argc, char* argv[]) {
     }
     std::cout << "Input file: " << config.input_file << std::endl;
     // 读取输入文件
-    std::vector<Request> requests = read_input_file(config.input_file);
-    // 初始化缓存模块
-    // 假设您有一个名为 `DataCache` 的缓存模块类
-    DataCache l1_cache("L1Cache", config.l1_lines, config.cacheline_size);
-    DataCache l2_cache("L2Cache", config.l2_lines, config.cacheline_size);
+    size_t num_requests;
+    Request* requests = read_input_file(config.input_file, &num_requests);
 
-    //创建（打开）tracefile
-    sc_trace_file *traceFile;
-    if (config.tracefile != NULL) {
-        traceFile = sc_create_vcd_trace_file(config.tracefile);
-        //test
-        MODULE module("module");
-        sc_signal<int> s;
-        module.p(s);
-        sc_trace(traceFile, s, "signal");
-        sc_start(5, SC_SEC);
-        //test end here
-    }
 
     // 其他代码，例如加载输入文件，运行模拟等
-    for (const Request& req : requests){
-        //Todo: 执行模拟
-        break;
-    }
-
-    sc_close_vcd_trace_file(traceFile);
+    struct Result result = run_simulation(config.cycles, config.l1_lines, config.l2_lines, config.cacheline_size, 
+                    config.l1_latency, config.l2_latency, config.memory_latency,
+                    num_requests, requests, config.tracefile ? config.tracefile : nullptr);
+    write_requests_to_csv(config.input_file, requests, num_requests);
+    std::cout << "Cycles: " << result.cycles << std::endl;
+    std::cout << "Misses: " << result.misses << std::endl;
+    std::cout << "Hits: " << result.hits << std::endl;
+    std::cout << "Primitive Gate Count: " << result.primitiveGateCount << std::endl;
+/*     sc_close_vcd_trace_file(traceFile); */
     return 0;
 }
