@@ -54,8 +54,8 @@ struct Result run_simulation(
         sc_trace(traceFile, cacheSystem.hit_l2, "hit_l2");
         sc_trace(traceFile, cacheSystem.hit_mem, "hit_mem");
         sc_trace(traceFile, cacheSystem.trigger, "trigger");
-        sc_trace(traceFile, cacheSystem.l1cmp, "l1cmp");
-        sc_trace(traceFile, cacheSystem.l2cmp, "l2cmp");
+        sc_trace(traceFile, cacheSystem.l2_trigger, "l1cmp");
+        sc_trace(traceFile, cacheSystem.mem_trigger, "l2cmp");
         sc_trace(traceFile, cacheSystem.memcmp, "memcmp");
         sc_trace(traceFile, cacheSystem.rev_ctr_l1, "rev_ctr_l1");
         sc_trace(traceFile, cacheSystem.mem_rev, "mem_rev");
@@ -71,7 +71,8 @@ struct Result run_simulation(
     misses = cacheSystem.misses;
 
     struct Result result;
-    result.cycles = cycles;
+    sc_time simulation_time = sc_time_stamp();
+    result.cycles = simulation_time / sc_time(1, SC_NS);
     result.misses = misses;
     result.hits = hits;
     result.primitiveGateCount = l1CacheLines * l2CacheLines * cacheLineSize; // 简化估算

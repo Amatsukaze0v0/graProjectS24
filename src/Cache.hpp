@@ -13,6 +13,7 @@ public:
     unsigned lineSize;
     unsigned latency;
 
+
     sc_in<bool> trg;
     sc_in<bool> we;
     sc_in<uint32_t> addr;
@@ -53,7 +54,6 @@ public:
 
             wait(trg.posedge_event());  // 等待触发信号
 
-
             if (next_hit.read()) {
                 std::cout << "Reverse Process activ." << std::endl;
                 unsigned offset_bits = log2(lineSize);
@@ -78,8 +78,10 @@ public:
                 std::cout << "Reverse write Data by line: " << index << std::endl;
                 std::cout << "By offset: " << offset << " and the value [ " << next_data_in.read() << "]" << std::endl;
                 std::cout << "With Tag: " << tag << std::endl;
+                std::cout << "Line valid: " << line->valid.read() << std::endl;
                 data_out.write(next_data_in.read());
                 wb_addr_o.write(address);
+                wait(SC_ZERO_TIME);
             } else {
                 std::cout << "cache inner process started." << std::endl;
 
@@ -102,6 +104,7 @@ public:
                 std::cout << "Offset for this round: " << offset << std::endl;
                 std::cout << "Tag for this round: " << tag << std::endl;
 
+                std::cout << "*********   Valid of line 16: " << lines[16]->valid.read() << std::endl;
                 std::cout << std::endl << "line valid is : " << line->valid.read() << std::endl;
                 std::cout << "Tag inside cache is : " << line->tag.read() << std::endl;
             

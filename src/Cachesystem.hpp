@@ -21,7 +21,7 @@ SC_MODULE(CacheSystem) {
     sc_signal<bool> we, l1_we_to_l2, l2_we_to_mem;
     sc_signal<sc_uint<32>> data_in, data_out_l1, data_out_l2, mem_data, l1_data_to_l2,  l2_data_to_mem, mem_back_l2, l2_back_l1, l1_unused;
     sc_signal<bool> hit_l1, hit_l2, hit_mem;
-    sc_signal<bool> trigger, l1cmp, l2cmp, memcmp, rev_ctr_l1, mem_rev, mem_reset;
+    sc_signal<bool> trigger, l2_trigger, mem_trigger, memcmp, rev_ctr_l1, mem_rev, mem_reset;
 
 
 
@@ -44,6 +44,7 @@ SC_MODULE(CacheSystem) {
           memoryLatency(memoryLatency) {
         
         // Connect L1 Cache
+
         l1Cache.trg.bind(trigger);
         l1Cache.addr.bind(addr);
         l1Cache.we.bind(we);
@@ -59,13 +60,13 @@ SC_MODULE(CacheSystem) {
         l1Cache.wb_addr_o.bind(l1_unused);
 
         // Connect L2 Cache
-        l2Cache.trg.bind(l1cmp);
+
+        l2Cache.trg.bind(l2_trigger);
         l2Cache.addr.bind(l1_addr_to_l2);
         l2Cache.we.bind(l1_we_to_l2);
         l2Cache.data_in.bind(l1_data_to_l2);
         l2Cache.data_out.bind(data_out_l2);
         l2Cache.hit.bind(hit_l2);
-        /* l2Cache.cmp.bind(l2cmp); */
         l2Cache.next_addr.bind(l2_addr_to_mem);
         l2Cache.next_data_out.bind(l2_data_to_mem);
         l2Cache.next_we.bind(l2_we_to_mem);
@@ -75,7 +76,7 @@ SC_MODULE(CacheSystem) {
         l2Cache.wb_addr_o.bind(l2_back_l1);
 
         // Connect Memory
-        memory.trg.bind(l2cmp);
+        memory.trg.bind(mem_trigger);
         memory.clk.bind(clk);
         memory.addr.bind(l2_addr_to_mem);
         memory.data_in.bind(l2_data_to_mem);
@@ -90,7 +91,7 @@ SC_MODULE(CacheSystem) {
 
         SC_THREAD(process_requests);
         sensitive << clk.pos();
-        dont_initialize();
+        //dont_initialize();
     }
 
     void process_request(Request& req) {
@@ -119,9 +120,9 @@ SC_MODULE(CacheSystem) {
         if ( (!hit_l1.read() ) || we.read()) {
             // L1 Miss, process L2 Cache
             std::cout << "L2cache process started." << std::endl;
-            l1cmp.write(1);
+            l2_trigger.write(1);
             wait(l2Cache.done_event);
-            l1cmp.write(0);
+            l2_trigger.write(0);
             if (!we.read()) {
                 req.data = l2Cache.data_out.read();
             }
@@ -132,9 +133,9 @@ SC_MODULE(CacheSystem) {
                 // L2 Miss, process Memory
                 std::cout << "Memory process started." << std::endl;
                 
-                l2cmp.write(1);
+                mem_trigger.write(1);
                 wait(memory.done_event);
-                l2cmp.write(0);
+                mem_trigger.write(0);
                 
                 std::cout << "Memory process done." << std::endl; 
                 //这里需要将data写入request
@@ -158,20 +159,18 @@ SC_MODULE(CacheSystem) {
                         mem_addr_helper.write(startAddress);
                         std::cout << "with StartAddress: " << startAddress << std::endl;
                         
-                        l2cmp.write(1);
-/*                         std::cout << "memory control is: " << l2cmp.read() << std::endl;
-                        std::cout << "Reverse is: " << mem_rev.read() << std::endl; */
+                        mem_trigger.write(1);
                         wait(memory.done_event);
                         wait(SC_ZERO_TIME);  // 确保信号稳定
-                        l2cmp.write(0);
+                        mem_trigger.write(0);
                         
                         //此刻开始，将新地址对应data传出mem
                         std::cout << "Memory starts to write L2." << std::endl;
-                        l1cmp.write(1);
+                        l2_trigger.write(1);
                         wait(SC_ZERO_TIME);  // 确保信号稳定
                         wait(l2Cache.done_event);
-                        l1cmp.write(0);
-
+                        l2_trigger.write(0);
+            
                         std::cout << "L2 writed back." << std::endl;
 
                         std::cout << "L2 starts to write L1." << std::endl;
@@ -180,19 +179,20 @@ SC_MODULE(CacheSystem) {
                         wait(SC_ZERO_TIME);  // 确保信号稳定
                         wait(l1Cache.done_event);
                         trigger.write(0);
-                        
+                        wait(SC_ZERO_TIME);  // 确保信号稳定
                         std::cout << "L1 writed back." << std::endl;
                         
                         startAddress += 4;
                     }
                     mem_rev.write(0);
                     rev_ctr_l1.write(0);
+                    wait(SC_ZERO_TIME);
 
-                    l2cmp.write(1);
+                    mem_trigger.write(1);
                     mem_reset = 1;
                     wait(SC_ZERO_TIME);
                     wait(memory.done_event);
-                    l2cmp.write(0);
+                    mem_trigger.write(0);
                     mem_reset.write(0);
                     wait(SC_ZERO_TIME);
                 }
@@ -219,6 +219,9 @@ SC_MODULE(CacheSystem) {
                     ++misses;
                 }
                 ++current_request_index;
+            } else {
+                sc_stop();
+                break;
             }
         }
     }

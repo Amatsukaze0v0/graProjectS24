@@ -39,7 +39,7 @@ public:
                 address = addr_helper.read() / 4;
                 data_out.write(storage[address]);
                 std::cout << "Get(R) Memory Address [" << address << "] 's value " << data_in.read() << std::endl;
-                wb_addr.write(address);
+                wb_addr.write(addr_helper.read());
                 wb.write(1);
                 wait(SC_ZERO_TIME);
                 std::cout << "Memory(R) send out Address " << address << std::endl;
