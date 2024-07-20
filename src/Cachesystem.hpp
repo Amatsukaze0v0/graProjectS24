@@ -45,13 +45,11 @@ SC_MODULE(CacheSystem) {
         
         // Connect L1 Cache
         l1Cache.trg.bind(trigger);
-        l1Cache.clk.bind(clk);
         l1Cache.addr.bind(addr);
         l1Cache.we.bind(we);
         l1Cache.data_in.bind(data_in);
         l1Cache.data_out.bind(data_out_l1);
         l1Cache.hit.bind(hit_l1);
-        /* l1Cache.cmp.bind(l1cmp); */
         l1Cache.l2_addr.bind(l1_addr_to_l2);
         l1Cache.l2_data_out.bind(l1_data_to_l2);
         l1Cache.l2_we.bind(l1_we_to_l2);
@@ -62,7 +60,6 @@ SC_MODULE(CacheSystem) {
 
         // Connect L2 Cache
         l2Cache.trg.bind(l1cmp);
-        l2Cache.clk.bind(clk);
         l2Cache.addr.bind(l1_addr_to_l2);
         l2Cache.we.bind(l1_we_to_l2);
         l2Cache.data_in.bind(l1_data_to_l2);
@@ -93,7 +90,7 @@ SC_MODULE(CacheSystem) {
 
         SC_THREAD(process_requests);
         sensitive << clk.pos();
-        //dont_initialize();
+        dont_initialize();
     }
 
     void process_request(Request& req) {

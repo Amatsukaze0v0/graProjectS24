@@ -145,6 +145,13 @@ int sc_main(int argc, char* argv[]) {
     struct Result result = run_simulation(config.cycles, config.l1_lines, config.l2_lines, config.cacheline_size, 
                     config.l1_latency, config.l2_latency, config.memory_latency,
                     num_requests, requests, config.tracefile ? config.tracefile : nullptr);
+    //cycle 不满足时的处理，直接重新执行simulation
+    if (result.hits + result.misses < num_requests) {
+        result = run_simulation(SIZE_MAX, config.l1_lines, config.l2_lines, config.cacheline_size, 
+                    config.l1_latency, config.l2_latency, config.memory_latency,
+                    num_requests, requests, config.tracefile ? config.tracefile : nullptr);
+    }
+    //写回csv文件，证明data已更新入request中（写回csv无要求）
     write_requests_to_csv(config.input_file, requests, num_requests);
     std::cout << "Cycles: " << result.cycles << std::endl;
     std::cout << "Misses: " << result.misses << std::endl;

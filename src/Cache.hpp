@@ -13,7 +13,6 @@ public:
     unsigned lineSize;
     unsigned latency;
 
-    sc_in<bool> clk;
     sc_in<bool> trg;
     sc_in<bool> we;
     sc_in<uint32_t> addr;
