@@ -19,14 +19,13 @@ public:
     sc_in<sc_uint<32>> data_in;
     sc_out<sc_uint<32>> data_out;
     sc_out<bool> hit;
-/*     sc_out<bool> cmp; */
     sc_event done_event;
 
-    sc_out<uint32_t> l2_addr;
-    sc_out<sc_uint<32>> l2_data_out;
-    sc_out<bool> l2_we;
-    sc_in<sc_uint<32>> l2_data_in;
-    sc_in<bool> l2_hit;
+    sc_out<uint32_t> next_addr;
+    sc_out<sc_uint<32>> next_data_out;
+    sc_out<bool> next_we;
+    sc_in<sc_uint<32>> next_data_in;
+    sc_in<bool> next_hit;
     sc_in<sc_uint<32>> wb_addr;
     sc_out<sc_uint<32>> wb_addr_o;
 
@@ -54,9 +53,8 @@ public:
 
             wait(trg.posedge_event());  // 等待触发信号
 
-            /* cmp.write(0); */
 
-            if (l2_hit.read()) {
+            if (next_hit.read()) {
                 std::cout << "Reverse Process activ." << std::endl;
                 unsigned offset_bits = log2(lineSize);
                 unsigned index_bits = log2(size);
@@ -74,17 +72,13 @@ public:
 
                 CacheLine* line = lines[index];
 
-                //std::cout << "Index for this round: " << index << std::endl;
-                
-                //std::cout << "Tag for this round: " << tag << std::endl;
-
-                line->data[offset / 4].write(l2_data_in.read());
+                line->data[offset / 4].write(next_data_in.read());
                 line->valid.write(true);
                 line->tag.write(tag);
                 std::cout << "Reverse write Data by line: " << index << std::endl;
-                std::cout << "By offset: " << offset << " and the value [ " << l2_data_in.read() << "]" << std::endl;
+                std::cout << "By offset: " << offset << " and the value [ " << next_data_in.read() << "]" << std::endl;
                 std::cout << "With Tag: " << tag << std::endl;
-                data_out.write(l2_data_in.read());
+                data_out.write(next_data_in.read());
                 wb_addr_o.write(address);
             } else {
                 std::cout << "cache inner process started." << std::endl;
@@ -115,9 +109,9 @@ public:
                     hit.write(true);
                     if (we.read()) {
                         line->data[offset / 4].write(data_in.read());  // write data hit
-                        l2_addr.write(addr.read());
-                        l2_data_out.write(data_in.read());
-                        l2_we.write(true);  // Write-through to L2
+                        next_addr.write(addr.read());
+                        next_data_out.write(data_in.read());
+                        next_we.write(true);  // Write-through to L2
                         wait(SC_ZERO_TIME);
                         std::cout << "Write hit. Data " << data_in.read() << " writed in cache." << std::endl;
                     } else {                                            // read hit
@@ -129,22 +123,18 @@ public:
                 } else {
                     hit.write(false);
                     if (!we.read()) {
-                        l2_addr.write(addr.read());
-                        l2_we.write(false);  // Read operation from L2
+                        next_addr.write(addr.read());
+                        next_we.write(false);  // Read operation from L2
                         wait(latency_to_time(latency));  // Simulate L2 latency
                         std::cout << "Read miss. Proceed to next Structur." << std::endl;
                     } else {
-/*                         line->data[offset / 4].write(data_in.read());
-                        line->valid.write(true);
-                        line->tag.write(tag); */
-                        l2_addr.write(addr.read());
-                        l2_data_out.write(data_in.read());
-                        l2_we.write(true);  // Write-through to L2
+                        next_addr.write(addr.read());
+                        next_data_out.write(data_in.read());
+                        next_we.write(true);  // Write-through to L2
                         std::cout << "Write miss. Data not writed." << std::endl;
                     }
                 }
             }
-           /*  cmp.write(1); */
             done_event.notify();  // 通知完成事件
         }
     }

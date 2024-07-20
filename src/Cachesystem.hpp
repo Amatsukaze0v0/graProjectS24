@@ -50,11 +50,11 @@ SC_MODULE(CacheSystem) {
         l1Cache.data_in.bind(data_in);
         l1Cache.data_out.bind(data_out_l1);
         l1Cache.hit.bind(hit_l1);
-        l1Cache.l2_addr.bind(l1_addr_to_l2);
-        l1Cache.l2_data_out.bind(l1_data_to_l2);
-        l1Cache.l2_we.bind(l1_we_to_l2);
-        l1Cache.l2_data_in.bind(data_out_l2);
-        l1Cache.l2_hit.bind(rev_ctr_l1);
+        l1Cache.next_addr.bind(l1_addr_to_l2);
+        l1Cache.next_data_out.bind(l1_data_to_l2);
+        l1Cache.next_we.bind(l1_we_to_l2);
+        l1Cache.next_data_in.bind(data_out_l2);
+        l1Cache.next_hit.bind(rev_ctr_l1);
         l1Cache.wb_addr.bind(l2_back_l1);
         l1Cache.wb_addr_o.bind(l1_unused);
 
@@ -66,11 +66,11 @@ SC_MODULE(CacheSystem) {
         l2Cache.data_out.bind(data_out_l2);
         l2Cache.hit.bind(hit_l2);
         /* l2Cache.cmp.bind(l2cmp); */
-        l2Cache.l2_addr.bind(l2_addr_to_mem);
-        l2Cache.l2_data_out.bind(l2_data_to_mem);
-        l2Cache.l2_we.bind(l2_we_to_mem);
-        l2Cache.l2_data_in.bind(mem_data);
-        l2Cache.l2_hit.bind(hit_mem);
+        l2Cache.next_addr.bind(l2_addr_to_mem);
+        l2Cache.next_data_out.bind(l2_data_to_mem);
+        l2Cache.next_we.bind(l2_we_to_mem);
+        l2Cache.next_data_in.bind(mem_data);
+        l2Cache.next_hit.bind(hit_mem);
         l2Cache.wb_addr.bind(mem_back_l2);
         l2Cache.wb_addr_o.bind(l2_back_l1);
 

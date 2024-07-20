@@ -24,8 +24,6 @@ void read_config(CacheConfig &config) {
     file >> config.l2_latency;
     file >> config.memory_latency;
     file.ignore();
-/*     std::getline(file, config.tracefile);
-    std::getline(file, config.input_file); */
 
     file.close();
 }
@@ -142,12 +140,14 @@ int sc_main(int argc, char* argv[]) {
 
 
     // 其他代码，例如加载输入文件，运行模拟等
-    struct Result result = run_simulation(config.cycles, config.l1_lines, config.l2_lines, config.cacheline_size, 
+    struct Result result;
+    //cycle 不满足时的处理，直接重新执行simulation
+    if (100 * num_requests > config.cycles ) {
+        result = run_simulation(0x7FFFFFFF, config.l1_lines, config.l2_lines, config.cacheline_size, 
                     config.l1_latency, config.l2_latency, config.memory_latency,
                     num_requests, requests, config.tracefile ? config.tracefile : nullptr);
-    //cycle 不满足时的处理，直接重新执行simulation
-    if (result.hits + result.misses < num_requests) {
-        result = run_simulation(SIZE_MAX, config.l1_lines, config.l2_lines, config.cacheline_size, 
+    } else {
+        result = run_simulation(config.cycles, config.l1_lines, config.l2_lines, config.cacheline_size, 
                     config.l1_latency, config.l2_latency, config.memory_latency,
                     num_requests, requests, config.tracefile ? config.tracefile : nullptr);
     }
@@ -157,6 +157,6 @@ int sc_main(int argc, char* argv[]) {
     std::cout << "Misses: " << result.misses << std::endl;
     std::cout << "Hits: " << result.hits << std::endl;
     std::cout << "Primitive Gate Count: " << result.primitiveGateCount << std::endl;
-/*     sc_close_vcd_trace_file(traceFile); */
+
     return 0;
 }
