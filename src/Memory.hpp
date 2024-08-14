@@ -7,7 +7,7 @@
 
 class Memory : public sc_module {
 public:
-    sc_in<bool> clk;
+
     sc_in<bool> trg;
     sc_in<bool> we;
     sc_in<uint32_t> addr;
@@ -33,32 +33,40 @@ public:
 
     void process() {
         while (true) {
-            wait(trg.posedge_event());  // 等待触发信号
+            wait(trg.posedge_event());  // waiting to trigger signal; 等待触发信号
             uint32_t address;
             if (reverse.read()) {
                 address = addr_helper.read() / 4;
                 data_out.write(storage[address]);
+
+                //optional print expression for debug
                 std::cout << "Get(R) Memory Address [" << address << "] 's value " << data_in.read() << std::endl;
+
                 wb_addr.write(addr_helper.read());
                 wb.write(1);
                 wait(SC_ZERO_TIME);
+
+                //optional print expression for debug
                 std::cout << "Memory(R) send out Address " << address << std::endl;
+
             } else if (reset.read()) {
                 wb.write(0);
             } else {
                 address = addr.read() / 4;  // Addressing by 32-bit words 
                 if (we.read()) {
                 storage[address] = data_in.read();
+                //optional print expression for debug
                 std::cout << "Set Memory Address [" << address << "] with value " << data_in.read() << std::endl;
                 wb.write(0);
                 } else {
                     data_out.write(storage[address]);
+                    //optional print expression for debug
                     std::cout << "Get Memory Address [" << address << "] 's value " << data_in.read() << std::endl;
                     wb.write(1);
                 }
             }
-            wait(latency_to_time(latency));  // 模拟延迟
-            done_event.notify();  // 通知完成事件
+            wait(latency_to_time(latency));  // simulate latency; 模拟延迟
+            done_event.notify();  // notify: finished; 通知完成事件
         }
     }
 

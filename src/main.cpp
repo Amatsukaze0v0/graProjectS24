@@ -29,7 +29,7 @@ void read_config(CacheConfig &config) {
 }
 
 
-// 函数用于读取并解析输入文件
+// funtion to read and analyse input; 函数用于读取并解析输入文件
 Request* read_input_file(const std::string& filename, size_t* num_requests) {
     std::cout << "Successfully in the CSV function." << std::endl;
     std::ifstream file(filename);
@@ -72,7 +72,7 @@ Request* read_input_file(const std::string& filename, size_t* num_requests) {
 
     file.close();
 
-    // 分配动态内存并复制请求
+    // distribute dyn. memory and copy request; 分配动态内存并复制请求
     *num_requests = requests.size();
     Request* requests_array = (Request*)malloc(*num_requests * sizeof(Request));
     if (requests_array == nullptr) {
@@ -85,7 +85,7 @@ Request* read_input_file(const std::string& filename, size_t* num_requests) {
 
     return requests_array;
 }
-
+//optional: check through the .csv if the requests are truely updated.
 void write_requests_to_csv(const std::string& filename, Request* requests, size_t num_requests) {
     std::ofstream outfile(filename);
     for (size_t i = 0; i < num_requests; ++i) {
@@ -96,33 +96,13 @@ void write_requests_to_csv(const std::string& filename, Request* requests, size_
     outfile.close();
 }
 
-
-//test
-SC_MODULE(MODULE) {
-
-  sc_port<sc_signal<int>> p;
-  SC_CTOR(MODULE) {
-
-    SC_THREAD(writer);
-  }
-  void writer() {
-    int v = 1;
-    while (true) {
-
-      p->write(v++);
-
-      wait(1, SC_SEC);
-    }
-  }
-};
-
 int sc_main(int argc, char* argv[]) {
     CacheConfig config;
     if (parse_args(argc, argv, &config) != 0) {
         return 1;
     }
 
-    // 打印解析的参数（用于调试）
+    // print analysed parameter; 打印解析的参数（用于调试）
     std::cout << "Cycles: " << config.cycles << std::endl;
     std::cout << "Cacheline size: " << config.cacheline_size << " bytes" << std::endl;
     std::cout << "L1 lines: " << config.l1_lines << std::endl;
@@ -134,15 +114,18 @@ int sc_main(int argc, char* argv[]) {
         std::cout << "Trace file: " << config.tracefile << std::endl;
     }
     std::cout << "Input file: " << config.input_file << std::endl;
-    // 读取输入文件
+    // read input file; 读取输入文件
     size_t num_requests;
     Request* requests = read_input_file(config.input_file, &num_requests);
 
 
-    // 其他代码，例如加载输入文件，运行模拟等
+    // other for loading input file, run simulation etc.; 其他代码，例如加载输入文件，运行模拟等
     struct Result result;
-    //cycle 不满足时的处理，直接重新执行simulation
+    // when cycle can't fullfill request, run simulation again; cycle 不满足时的处理，直接重新执行simulation
     int time_to_done = config.cacheline_size / 4 * (config.l1_latency + config.l2_latency + config.memory_latency);
+    if (config.cacheline_size < 4 || config.cacheline_size & 3 != 0 || config.l1_lines & 3 != 0 || config.l2_lines & 3 != 0) {
+        throw std::runtime_error("Linesize / Cachelines must be Divisible by 4.");
+    } 
     if (time_to_done * num_requests > config.cycles ) {
         result = run_simulation(0x7FFFFFFF, config.l1_lines, config.l2_lines, config.cacheline_size, 
                     config.l1_latency, config.l2_latency, config.memory_latency,
@@ -152,7 +135,7 @@ int sc_main(int argc, char* argv[]) {
                     config.l1_latency, config.l2_latency, config.memory_latency,
                     num_requests, requests, config.tracefile ? config.tracefile : nullptr);
     }
-    //写回csv文件，证明data已更新入request中（写回csv无要求）
+    // Optional: write back to csv file, prove data is updated in request; 写回csv文件，证明data已更新入request中（写回csv无要求）
     write_requests_to_csv(config.input_file, requests, num_requests);
     std::cout << "Cycles: " << result.cycles << std::endl;
     std::cout << "Misses: " << result.misses << std::endl;

@@ -77,7 +77,6 @@ SC_MODULE(CacheSystem) {
 
         // Connect Memory
         memory.trg.bind(mem_trigger);
-        memory.clk.bind(clk);
         memory.addr.bind(l2_addr_to_mem);
         memory.data_in.bind(l2_data_to_mem);
         memory.we.bind(l2_we_to_mem);
@@ -91,12 +90,12 @@ SC_MODULE(CacheSystem) {
 
         SC_THREAD(process_requests);
         sensitive << clk.pos();
-        //dont_initialize();
+
     }
 
     void process_request(Request& req) {
         if (req.addr & 3 != 0 || req.addr > 0xFFFFF) {
-            throw std::runtime_error("Address illegal!");
+            throw std::runtime_error("Address illegal! For our 1MB Memory must the Address under 0xFFFFF and Divisible by 4");
         }
         addr.write(req.addr);
         we.write(req.we);
@@ -109,7 +108,7 @@ SC_MODULE(CacheSystem) {
         
         std::cout << "L1 WE is : " << we.read() << std::endl;
         wait(l1Cache.done_event);
-        wait(SC_ZERO_TIME);     // index 为0时thread返回过快，trigger未归零, 别动
+        wait(SC_ZERO_TIME);     // wait while trigger not 0; index 为0时thread返回过快，trigger未归零, 别动
         trigger.write(0);
         if (!we.read()) {
             req.data = l1Cache.data_out.read();
@@ -138,7 +137,7 @@ SC_MODULE(CacheSystem) {
                 mem_trigger.write(0);
                 
                 std::cout << "Memory process done." << std::endl; 
-                //这里需要将data写入request
+                //data should being written in request; 这里data应已写入request
                 if (!we.read()) {
                     req.data = memory.data_out.read();
                 }
@@ -161,13 +160,13 @@ SC_MODULE(CacheSystem) {
                         
                         mem_trigger.write(1);
                         wait(memory.done_event);
-                        wait(SC_ZERO_TIME);  // 确保信号稳定
+                        wait(SC_ZERO_TIME);  // make sure the signal is stable; 确保信号稳定
                         mem_trigger.write(0);
                         
-                        //此刻开始，将新地址对应data传出mem
+                        //from here: send new addresse coresponde to data from mem; 此刻开始，将新地址对应data传出mem
                         std::cout << "Memory starts to write L2." << std::endl;
                         l2_trigger.write(1);
-                        wait(SC_ZERO_TIME);  // 确保信号稳定
+                        wait(SC_ZERO_TIME);  // make sure the signal is stable; 确保信号稳定
                         wait(l2Cache.done_event);
                         l2_trigger.write(0);
             
@@ -176,10 +175,10 @@ SC_MODULE(CacheSystem) {
                         std::cout << "L2 starts to write L1." << std::endl;
                         
                         trigger.write(1);
-                        wait(SC_ZERO_TIME);  // 确保信号稳定
+                        wait(SC_ZERO_TIME);  // make sure the signal is stable; 确保信号稳定
                         wait(l1Cache.done_event);
                         trigger.write(0);
-                        wait(SC_ZERO_TIME);  // 确保信号稳定
+                        wait(SC_ZERO_TIME);  // make sure the signal is stable; 确保信号稳定
                         std::cout << "L1 writed back." << std::endl;
                         
                         startAddress += 4;
@@ -205,13 +204,13 @@ SC_MODULE(CacheSystem) {
         int counter = 0;
         std::cout << "Numrequests is " << numRequests << std::endl;
         while (true) {
-            wait();  // 等待时钟上升沿
+            wait();  // wait for rising edge; 等待时钟上升沿
 
             if (current_request_index < numRequests) {
                 counter++;
                 std::cout << "This is the " << counter << " time." << std::endl;
 
-                process_request(requests[current_request_index]);  // 传递引用
+                process_request(requests[current_request_index]);  // transmit referrence; 传递引用
 
                 if (hit_l1.read() || hit_l2.read()) {
                     ++hits;

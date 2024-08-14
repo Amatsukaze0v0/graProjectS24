@@ -30,10 +30,10 @@ struct Result run_simulation(
     sc_trace_file *traceFile;
     if (tracefile != nullptr) {
         traceFile = sc_create_vcd_trace_file(tracefile);
-        // 跟踪时钟信号
+        // trace clock signal; 跟踪时钟信号
         sc_trace(traceFile, clk, "clk");
 
-        // 跟踪CacheSystem模块中的所有信号
+        // trace signals of all Modules in CacheSystem; 跟踪CacheSystem模块中的所有信号
         sc_trace(traceFile, cacheSystem.addr, "addr");
         sc_trace(traceFile, cacheSystem.l1_addr_to_l2, "l1_addr_to_l2");
         sc_trace(traceFile, cacheSystem.l2_addr_to_mem, "l2_addr_to_mem");
@@ -75,7 +75,7 @@ struct Result run_simulation(
     result.cycles = simulation_time / sc_time(1, SC_NS);
     result.misses = misses;
     result.hits = hits;
-    result.primitiveGateCount = l1CacheLines * l2CacheLines * cacheLineSize; // 简化估算
+    result.primitiveGateCount = l1CacheLines * l2CacheLines * cacheLineSize; // simplify estimation; 简化估算
 
     if (tracefile != nullptr) {
         sc_close_vcd_trace_file(traceFile);

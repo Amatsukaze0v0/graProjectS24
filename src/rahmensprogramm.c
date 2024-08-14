@@ -35,7 +35,7 @@ int parse_args(int argc, char *argv[], CacheConfig *config) {
         {0, 0, 0, 0}
     };
 
-    // 设置默认值
+    // set default value; 设置默认值
     config->cycles = 1000;
     config->cacheline_size = 64;
     config->l1_lines = 128;
